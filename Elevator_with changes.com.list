@@ -1,0 +1,284 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+Elevator_with changes.com -- emu8086 assembler version: 4.07  
+ 
+[ 19-11-2013  --  13:33:21 ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       
+[   2]        :                                       ; You may customize this and other start-up templates;
+[   3]        :                                       ; The location of this template is c:\emu8086\inc\0_com_template.txt
+[   4]        :                                       
+[   5]        :                                       org 100h
+[   6]        :                                       
+[   7]        :                                       PUSH_ALL MACRO; Macro to push various registers on to the stack
+[   8]        :                                       PUSH AX
+[   9]        :                                       PUSH BX
+[  10]        :                                       PUSH CX
+[  11]        :                                       PUSH DX
+[  12]        :                                       PUSH BP
+[  13]        :                                       ENDM
+[  14]        :                                       
+[  15]        :                                       
+[  16]        :                                       POP_ALL MACRO; Macro to pop various registers from the stack
+[  17]        :                                       POP BP
+[  18]        :                                       POP DX
+[  19]        :                                       POP CX
+[  20]        :                                       POP BX
+[  21]        :                                       POP AX
+[  22]        :                                       ENDM
+[  23]        :                                       
+[  24]        :                                       
+[  25]        :                                       MOTOR_UP MACRO;Macro to make the motor move up
+[  26]        :                                       PUSH_ALL
+[  27]        :                                       MOV AL,0A0H;The motor moves up if it receives a signal 1010b
+[  28]        :                                       OUT PORTC,AL;This is done using the portc upper
+[  29]        :                                       POP_ALL
+[  30]        :                                       ENDM
+[  31]        :                                       
+[  32]        :                                       
+[  33]        :                                       MOTOR_DOWN MACRO;Macro to make the motor move down
+[  34]        :                                       PUSH_ALL
+[  35]        :                                       MOV AL,50H;The motor moves down if it receives a signal 0101b
+[  36]        :                                       OUT PORTC,AL;This is done using portc upper
+[  37]        :                                       POP_ALL
+[  38]        :                                       ENDM
+[  39]        :                                       
+[  40]        :                                       
+[  41]        :                                       MOTOR_OFF MACRO;Macro to turn off the motor
+[  42]        :                                       PUSH_ALL
+[  43]        :                                       XOR AL,AL;The motor switches off if it receives a signal 0000b
+[  44]        :                                       OUT PORTC,AL;This done by using portc upper
+[  45]        :                                       POP_ALL
+[  46]        :                                       ENDM
+[  47]        :                                       
+[  48]        :                                       
+[  49]        :                                       DOOR_OPEN MACRO;Macro to open the door
+[  50]        :                                       PUSH_ALL
+[  51]        :                                       MOV AL,0AH;Door opens if it receives the signal 1010b
+[  52]        :                                       OUT PORTC,AL;This is done using the portc lower
+[  53]        :                                       POP_ALL
+[  54]        :                                       ENDM
+[  55]        :                                       
+[  56]        :                                       
+[  57]        :                                       DOOR_CLOSE MACRO;Macro to close the door
+[  58]        :                                       PUSH_ALL
+[  59]        :                                       MOV AL,05H;Door closes if it receives the signal 0101b
+[  60]        :                                       OUT PORTC,AL;This is done using portc lower
+[  61]        :                                       POP_ALL
+[  62]        :                                       ENDM
+[  63]        :                                       
+[  64]        :                                       .ORG 0100H
+[  65]        :                                       
+[  66]        :                                       .MODEL TINY
+[  67]        :                                       
+[  68]    0100: EB 06                                 .DATA
+[  69]    0102: 06 05 03                              TABLE_1 DB 06H,05H,03H;Lookup Table - limit switches
+[  70]    0105: 00 01 02                              TABLE_2 DB 00H,01H,02H;Lookup Table - 7 seg displays
+[  71]        :                                       ;TABLE_3 DB
+[  72]        :                                       PORTA EQU 10H;Address of porta
+[  73]        :                                       PORTB EQU 12H;Address of portb
+[  74]        :                                       PORTC EQU 14H;Address of portc
+[  75]        :                                       CREG1 EQU 16H;Address of the control register of the 8255
+[  76]        :                                       
+[  77]        :                                       
+[  78]    0108:                                       .CODE
+[  79]    0108:                                       .STARTUP
+[  80]        :                                       ;CLI
+[  81]    0108: B0 90                                 MOV AL,90h; Control word to the 8255,basic i/o mode,porta-input(mode 0),portb-
+[  82]        :                                       ;output(mode 0),portc-output
+[  83]    010A: E6 16                                 OUT CREG1,AL;
+[  84]    010C: 33 C0                                 XOR AX,AX; Initializing the Interrupt Vector Table
+[  85]    010E: 8E C0                                 MOV ES,AX; The DI register acts as a pointer to the extra segment
+[  86]    0110: BF 08 00                              MOV DI,08H; The starting address location for the interrupt vector corresponding to NMI
+[  87]    0113: B8 A3 01                              MOV AX,OFFSET EMERGENCY;IP is stored
+[  88]    0116: AB                                    STOSW
+[  89]    0117: 8C C8                                 MOV AX,CS;CS is stored
+[  90]    0119: AB                                    STOSW
+[  91]    011A: E8 4A 00                              CALL RESET;Bringing the lift to the ground floor, as the system is reset
+[  92]    011D: E8 1E 01                              CALL DOOR;Opening the door
+[  93]        :                                       ;STI;Setting the interrupt flag
+[  94]        :                                       ;CALL SWITCH_STATUS; Waiting for an interrupt
+[  95]    0120: E8 54 01                              HERE: CALL SWITCH_STATUS
+[  96]    0123: E8 13 00                              	CALL WAIT
+[  97]    0126: 83 FB 03                              CMP BX,03H
+[  98]    0129: 74 F5                                 JZ HERE
+[  99]    012B: 3B C3                                 CMP AX,BX
+[ 100]    012D: 74 F1                                 JZ HERE
+[ 101]    012F: E8 AD 00                              CALL STANDARD
+[ 102]    0132: EB EC                                 	JMP HERE
+[ 103]    0134: B8 00 4C CD 21                        .EXIT
+[ 104]        :                                       
+[ 105]    0139:                                       WAIT PROC NEAR;
+[ 106]    0139: 50                                    	PUSH AX
+[ 107]    013A: 51                                    	PUSH CX
+[ 108]    013B: 52                                    	PUSH DX
+[ 109]    013C: E4 10                                 	IN AL,PORTA
+[ 110]    013E: E8 62 01                              	CALL DELAY_10MS
+[ 111]    0141: E8 5F 01                              	CALL DELAY_10MS
+[ 112]    0144: E4 10                                 	IN AL,PORTA
+[ 113]    0146: 33 DB                                 	XOR BX,BX
+[ 114]    0148: 8A D8                                 	MOV BL,AL
+[ 115]    014A: 80 E3 38                              	AND BL,38H
+[ 116]    014D: 33 FF                                 	XOR DI,DI
+[ 117]    014F: D0 EB D0 EB D0 EB                     SHR BL,03H
+[ 118]    0155: B9 03 00                              	MOV CX,03H
+[ 119]    0158: 3A 9D 02 01                           	YS1: CMP BL,TABLE_1[DI]
+[ 120]    015C: 74 03                                 	JZ YS2
+[ 121]    015E: 47                                    	INC DI
+[ 122]    015F: E2 F7                                 LOOP YS1
+[ 123]    0161: 8B DF                                 YS2: MOV BX,DI
+[ 124]    0163: 5A                                    	POP DX
+[ 125]    0164: 59                                    	POP CX
+[ 126]    0165: 58                                    	POP AX
+[ 127]    0166: C3                                    	RET
+[ 128]        :                                       WAIT ENDP
+[ 129]        :                                       	
+[ 130]        :                                       
+[ 131]    0167:                                       RESET PROC NEAR; Reset Procedure
+[ 132]    0167: 50 53 51 52 55                        PUSH_ALL
+[ 133]    016C: 33 C0                                 XOR AX,AX; AX register is used to store the status
+[ 134]    016E: E8 06 01                              CALL SWITCH_STATUS
+[ 135]    0171: BA 00 00                              MOV DX,00H
+[ 136]    0174: 3B C2                                 CMP AX,DX;Checking if the Lift is already in the ground Floor
+[ 137]    0176: 74 25                                 JZ DONE1
+[ 138]    0178: 50 53 51 52 55 B0 50 E6 14 5D 5A 59   MOTOR_DOWN
+                5B 58                               
+[ 139]    0186: 33 C0                                 AGAIN1:XOR AX,AX
+[ 140]    0188: E8 EC 00                              CALL SWITCH_STATUS
+[ 141]    018B: 3B C2                                 CMP AX,DX
+[ 142]    018D: 75 F7                                 JNZ AGAIN1
+[ 143]    018F: 50 53 51 52 55 32 C0 E6 14 5D 5A 59   MOTOR_OFF
+                5B 58                               
+[ 144]    019D: 5D 5A 59 5B 58                        DONE1:POP_ALL
+[ 145]    01A2: C3                                    RET
+[ 146]        :                                       RESET ENDP
+[ 147]        :                                       
+[ 148]        :                                       
+[ 149]        :                                       
+[ 150]        :                                       
+[ 151]    01A3:                                       EMERGENCY PROC NEAR;Emergency Procedure
+[ 152]    01A3: 50 53 51 52 55                        PUSH_ALL
+[ 153]    01A8: 33 C0                                 XOR AX,AX; AX register is used to store the status
+[ 154]    01AA: E8 CA 00                              CALL SWITCH_STATUS
+[ 155]    01AD: BA 00 00                              MOV DX,00H
+[ 156]    01B0: 3B C2                                 CMP AX,DX;Checking if the Lift is already in the ground Floor
+[ 157]    01B2: 74 25                                 JZ DONE
+[ 158]    01B4: 50 53 51 52 55 B0 50 E6 14 5D 5A 59   MOTOR_DOWN
+                5B 58                               
+[ 159]    01C2: 33 C0                                 AGAIN:XOR AX,AX
+[ 160]    01C4: E8 B0 00                              CALL SWITCH_STATUS
+[ 161]    01C7: 3B C2                                 CMP AX,DX
+[ 162]    01C9: 75 F7                                 JNZ AGAIN
+[ 163]    01CB: 50 53 51 52 55 32 C0 E6 14 5D 5A 59   MOTOR_OFF
+                5B 58                               
+[ 164]    01D9: 5D 5A 59 5B 58                        DONE:POP_ALL
+[ 165]    01DE: CF                                    IRET
+[ 166]        :                                       EMERGENCY ENDP
+[ 167]        :                                       
+[ 168]        :                                       
+[ 169]        :                                       
+[ 170]        :                                       
+[ 171]        :                                       
+[ 172]    01DF:                                       STANDARD PROC NEAR
+[ 173]    01DF: 50 53 51 52 55                        PUSH_ALL
+[ 174]    01E4: 2B C3                                 SUB AX,BX ; Present Floor-Destination floor
+[ 175]    01E6: 74 4D                                 JZ LAST;
+[ 176]    01E8: 25 00 80                              AND AX,8000H; Obtaining the MSBit
+[ 177]    01EB: 74 25                                 JZ DOWN; If positive the lift must move down
+[ 178]    01ED: 50 53 51 52 55 B0 A0 E6 14 5D 5A 59   MOTOR_UP; If not, the lift must move up
+                5B 58                               
+[ 179]    01FB: E8 79 00                              WHILE1:CALL SWITCH_STATUS
+[ 180]    01FE: 3B C3                                 CMP AX,BX
+[ 181]    0200: 75 F9                                 JNZ WHILE1
+[ 182]    0202: 50 53 51 52 55 32 C0 E6 14 5D 5A 59   MOTOR_OFF
+                5B 58                               
+[ 183]    0210: EB 23                                 JMP LAST
+[ 184]    0212: 50 53 51 52 55 B0 50 E6 14 5D 5A 59   DOWN:MOTOR_DOWN
+                5B 58                               
+[ 185]    0220: E8 54 00                              WHILE2:CALL SWITCH_STATUS
+[ 186]    0223: 3B C3                                 CMP AX,BX
+[ 187]    0225: 75 F9                                 JNZ WHILE2
+[ 188]    0227: 50 53 51 52 55 32 C0 E6 14 5D 5A 59   MOTOR_OFF
+                5B 58                               
+[ 189]    0235: E8 06 00                              LAST: CALL DOOR
+[ 190]    0238: 5D 5A 59 5B 58                        POP_ALL
+[ 191]    023D: C3                                    RET
+[ 192]        :                                       STANDARD ENDP
+[ 193]        :                                       
+[ 194]        :                                       
+[ 195]    023E:                                       DOOR PROC NEAR
+[ 196]    023E: 50 53 51 52 55                        PUSH_ALL
+[ 197]    0243: 50 53 51 52 55 B0 0A E6 14 5D 5A 59   DOOR_OPEN
+                5B 58                               
+[ 198]    0251: B9 E8 03                              MOV CX,3E8H; 10s Counter value
+[ 199]    0254: E4 10                                 X:IN AL,PORTA
+[ 200]    0256: 24 38                                 AND AL,38H
+[ 201]    0258: B3 38                                 MOV BL,38H
+[ 202]    025A: 3A C3                                 CMP AL,BL
+[ 203]    025C: 75 05                                 JNZ ENDING
+[ 204]    025E: E8 42 00                              CALL DELAY_10MS
+[ 205]    0261: E2 F1                                 LOOP X
+[ 206]    0263: 50 53 51 52 55 B0 05 E6 14 5D 5A 59   ENDING:DOOR_CLOSE
+                5B 58                               
+[ 207]    0271: 5D 5A 59 5B 58                        POP_ALL
+[ 208]    0276: C3                                    RET
+[ 209]        :                                       DOOR ENDP
+[ 210]        :                                       
+[ 211]        :                                       
+[ 212]    0277:                                       SWITCH_STATUS PROC NEAR; Procedure that obtains the present status of the lift through
+[ 213]        :                                       ;the limit switches and returns it through AL.
+[ 214]    0277: 53                                    PUSH BX
+[ 215]    0278: 57                                    PUSH DI
+[ 216]    0279: 51                                    PUSH CX
+[ 217]    027A: E4 10                                 IN AL,PORTA
+[ 218]    027C: E8 24 00                              	CALL DELAY_10MS
+[ 219]    027F: E8 21 00                              	CALL DELAY_10MS
+[ 220]    0282: E4 10                                 IN AL,PORTA
+[ 221]    0284: 8B D8                                 	MOV BX,AX;
+[ 222]    0286: 83 E3 07                              AND BX,0007H;Obtaining the status of the limit switches
+[ 223]    0289: 33 FF                                 XOR DI,DI;DI will act as counter
+[ 224]    028B: B9 03 00                              MOV CX,03H
+[ 225]    028E: 3A 9D 02 01                           XS1:CMP BL,TABLE_1[DI]
+[ 226]    0292: 74 03                                 JZ XS2
+[ 227]    0294: 47                                    INC DI
+[ 228]    0295: E2 F7                                 LOOP XS1
+[ 229]    0297: 8B C7                                 XS2:MOV AX,DI
+[ 230]    0299: BB 05 01                              LEA BX,TABLE_2
+[ 231]    029C: D7                                    XLAT
+[ 232]    029D: E6 12                                 OUT PORTB,AL; Glowing the indicator panel through a 7447
+[ 233]    029F: 59                                    POP CX
+[ 234]    02A0: 5F                                    POP DI
+[ 235]    02A1: 5B                                    POP BX
+[ 236]    02A2: C3                                    RET
+[ 237]        :                                       SWITCH_STATUS ENDP
+[ 238]        :                                       
+[ 239]        :                                       
+[ 240]    02A3:                                       DELAY_10MS PROC NEAR;Procedure to produce a 10 ms delay
+[ 241]    02A3: BA E0 08                              MOV DX,2272d
+[ 242]    02A6: 90                                    X1:NOP
+[ 243]    02A7: 4A                                    DEC DX
+[ 244]    02A8: 75 FC                                 JNZ X1
+[ 245]    02AA: C3                                    RET
+[ 246]        :                                       DELAY_10MS ENDP
+[ 247]        :                                       
+[ 248]        :                                       
+[ 249]        :                                       
+[ 250]    02AB: C3                                    ret
+[ 251]        :                                       
+[ 252]        :                                       
+[ 253]        :                                       
+[ 254]        :                                       
+[ 255]        :                                       
+[ 256]        :                                       
+ 
+===================================================================================================
+ 
+
+
+
+
+===================================================================================================

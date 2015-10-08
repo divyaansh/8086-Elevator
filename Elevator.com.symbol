@@ -1,0 +1,35 @@
+< THE SYMBOL TABLE >  Elevator.com  --  emu8086 assembler version: 4.07 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+TABLE_1                  	00102     	1         	VAR       	(NOSEG)   
+TABLE_2                  	00105     	1         	VAR       	(NOSEG)   
+CODE                     	00108     	-1        	LABEL     	(NOSEG)   
+STARTUP                  	00108     	-1        	LABEL     	(NOSEG)   
+HERE                     	00120     	-1        	LABEL     	(NOSEG)   
+WAIT                     	00139     	-1        	NEAR      	(NOSEG)   
+YS1                      	00158     	-1        	LABEL     	(NOSEG)   
+YS2                      	00161     	-1        	LABEL     	(NOSEG)   
+RESET                    	00167     	-1        	NEAR      	(NOSEG)   
+AGAIN1                   	00186     	-1        	LABEL     	(NOSEG)   
+DONE1                    	0019D     	-1        	LABEL     	(NOSEG)   
+EMERGENCY                	001A3     	-1        	NEAR      	(NOSEG)   
+AGAIN                    	001C2     	-1        	LABEL     	(NOSEG)   
+DONE                     	001D9     	-1        	LABEL     	(NOSEG)   
+STANDARD                 	001DF     	-1        	NEAR      	(NOSEG)   
+WHILE1                   	001FB     	-1        	LABEL     	(NOSEG)   
+DOWN                     	00212     	-1        	LABEL     	(NOSEG)   
+WHILE2                   	00220     	-1        	LABEL     	(NOSEG)   
+LAST                     	00235     	-1        	LABEL     	(NOSEG)   
+DOOR                     	0023E     	-1        	NEAR      	(NOSEG)   
+X                        	00254     	-1        	LABEL     	(NOSEG)   
+ENDING                   	00263     	-1        	LABEL     	(NOSEG)   
+SWITCH_STATUS            	00277     	-1        	NEAR      	(NOSEG)   
+XS1                      	0028E     	-1        	LABEL     	(NOSEG)   
+XS2                      	00297     	-1        	LABEL     	(NOSEG)   
+DELAY_10MS               	002A3     	-1        	NEAR      	(NOSEG)   
+X1                       	002A6     	-1        	LABEL     	(NOSEG)   
+===================================================================================================
+[ 15-11-2013  --  15:04:04 ] 
+< END >
+ 
